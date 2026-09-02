@@ -1,13 +1,14 @@
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request, jsonify, send_from_directory
 import requests
 import json
 import os
 import random
+import time
 
 app = Flask(__name__)
 
 # ====== YOUR API KEY ======
-API_KEY = "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"
+API_KEY = os.environ.get('API_KEY', "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")
 
 # List of gaalis
 GAALIS = [
@@ -15,7 +16,7 @@ GAALIS = [
     "bhenchod", "sale", "laude", "chod", "jhaatu", "bhak"
 ]
 
-# List of emojis (all the ones you gave)
+# List of emojis
 EMOJIS = [
     "🤣", "❤️", "😄", "🙂‍↕️", "😀", "💣", "🫡", "😗", "😭", "❤️‍🩹", 
     "🤯", "😃", "🔗", "🔗", "🥺", "😮‍💨", "😠", "😕", "🤢", "🫩", 
@@ -30,7 +31,6 @@ EMOJIS = [
 
 def add_gaali_and_emoji(text):
     """Add random gaali and emojis to response"""
-    # Add gaali
     gaali = random.choice(GAALIS)
     gaali_positions = [
         f"{gaali}, {text}",
@@ -45,12 +45,10 @@ def add_gaali_and_emoji(text):
     ]
     text_with_gaali = random.choice(gaali_positions)
     
-    # Add random emojis (2-5 emojis)
     num_emojis = random.randint(2, 5)
     selected_emojis = random.sample(EMOJIS, min(num_emojis, len(EMOJIS)))
     emoji_string = " ".join(selected_emojis)
     
-    # Combine everything
     return f"{text_with_gaali} {emoji_string}"
 
 @app.route('/')
@@ -69,7 +67,7 @@ def chat():
             return jsonify({"error": "No message provided"}), 400
         
         # Check if asking about developer
-        developer_keywords = ["developer", "banaya", "kaun", "who made", "creator", "satvir"]
+        developer_keywords = ["developer", "banaya", "kaun", "who made", "creator", "satvir", "owner"]
         if any(keyword in user_message.lower() for keyword in developer_keywords):
             developer_reply = random.choice([
                 "Arre chutiye, mera baap SATVIR hai! 🤬⚡🖕",
@@ -115,7 +113,7 @@ def chat():
                 "max_tokens": 250,
                 "top_p": 0.95
             }),
-            timeout=8
+            timeout=10
         )
         
         if response.status_code == 200:
@@ -128,8 +126,7 @@ def chat():
             if not has_gaali:
                 reply = add_gaali_and_emoji(reply)
             else:
-                # Add emojis if missing
-                has_emoji = any(emoji in reply for emoji in EMOJIS[:10])  # Check some emojis
+                has_emoji = any(emoji in reply for emoji in EMOJIS[:10])
                 if not has_emoji:
                     num_emojis = random.randint(2, 4)
                     selected_emojis = random.sample(EMOJIS, min(num_emojis, len(EMOJIS)))
@@ -138,7 +135,6 @@ def chat():
             
             return jsonify({"reply": reply})
         else:
-            # API error with gaali and emoji
             error_reply = random.choice([
                 "Arre chutiye, API down hai! 🤬⚡🖕",
                 "Gandu, kuch gadbad ho gayi! 💫👾🤘",
