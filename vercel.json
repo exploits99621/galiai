@@ -1,0 +1,18 @@
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "ai.py",
+      "use": "@vercel/python"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "ai.py"
+    }
+  ],
+  "env": {
+    "API_KEY": "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"
+  }
+}
